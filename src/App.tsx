@@ -1,5 +1,5 @@
 import './App.css';
-import Dictaphone from './componentes/Dictaphone';
+import Dictaphone from './components/Dictaphone';
 import { Box, Center, Text } from '@chakra-ui/react';
 import { useSpeechRecognition } from 'react-speech-recognition';
 

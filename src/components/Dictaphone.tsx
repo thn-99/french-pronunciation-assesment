@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import { Result, Word } from '../openIpa/constants/Interfaces';
+import { Result } from '../openIpa/constants/Interfaces';
 import parseFrench from '../openIpa/transcription/french/ParseFrench';
 import { compareTwoStrings } from 'string-similarity';
 import { Box, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
 import { FaMicrophone } from 'react-icons/fa'
-import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces, makeWagnerFicherMatrix } from './costMatrix';
+import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces } from '../utils/WagnerFischerUtils';
 const Dictaphone = () => {
+  const [lastListeningState, setLastListeningState] = useState(false);
+  const [givenTextWordsPhonemes, setGivenTextWordsPhonemes] = useState<string>();
+  const [transcriptWordsPhonemes, setTranscriptWordsPhonemes] = useState<string>();
+  const [wordsPuntuation, setWordsPuntuation] = useState<number>();
+  const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
+  const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
+  const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
+
   const givenText = useRef<HTMLInputElement>(null);
   const {
     transcript,
@@ -14,25 +22,18 @@ const Dictaphone = () => {
     resetTranscript
   } = useSpeechRecognition();
 
-  const [lastListeningState, setLastListeningState] = useState(false);
   useEffect(() => {
     if (lastListeningState && !listening) {
-      toPhonemes();
+      convertAndScore();
     }
     setLastListeningState(listening);
   }, [listening])
 
 
-  const [givenTextWordsPhonemes, setgivenTextWordsPhonemes] = useState<string>();
-  const [transcriptWordsPhonemes, settranscriptWordsPhonemes] = useState<string>();
-  const [wordsPuntuation, setWordsPuntuation] = useState<number>();
-  const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
-  const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
-  const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
 
 
 
-  const onClickStart = () => {
+  const onListeningToggle = () => {
     if (!listening) {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: false, language: 'fr-FR' });
@@ -41,7 +42,7 @@ const Dictaphone = () => {
     }
   }
 
-  const toPhonemes = () => {
+  const convertAndScore = () => {
     let givenTextValue = '';
     if (givenText.current) {
       givenTextValue = givenText.current.value;
@@ -57,12 +58,12 @@ const Dictaphone = () => {
     const transcriptConverted = parseFrench(transcript, true, false);
 
 
-    let givenPhonemesText = getStringFromConversionToIpaResult(givenTextConverted);
-    setgivenTextWordsPhonemes(givenPhonemesText);
+    const givenPhonemesText = getStringFromConversionToIpaResult(givenTextConverted);
+    setGivenTextWordsPhonemes(givenPhonemesText);
 
 
-    let transPhonemesText = getStringFromConversionToIpaResult(transcriptConverted);
-    settranscriptWordsPhonemes(transPhonemesText);
+    const transPhonemesText = getStringFromConversionToIpaResult(transcriptConverted);
+    setTranscriptWordsPhonemes(transPhonemesText);
 
 
     const wordPunt = compareTwoStrings(transcript, givenTextValue);
@@ -97,7 +98,7 @@ const Dictaphone = () => {
     <Box>
       <Input ref={givenText} isDisabled={listening} defaultValue='je aime vous'></Input>
       <Center>
-        <Circle size={'50px'} onClick={onClickStart} backgroundColor={listening ? 'green' : 'red'} >
+        <Circle size={'50px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
           <FaMicrophone />
         </Circle>
       </Center>

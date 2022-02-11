@@ -1,6 +1,3 @@
-import { left } from "@popperjs/core";
-import { stringify } from "querystring";
-
 const consonantsCostsMatrix: Record<string, Record<string, number>> = {
     "p": {
         "p": 0,
@@ -743,7 +740,7 @@ function getCost(char1: string, char2: string): number {
     return 9;
 }
 
-function makeWagnerFicherMatrix(str1: string, str2: string) {
+function createWagnerFischerMatrix(str1: string, str2: string) {
 
     let distances: Array<Array<number>> = [];
 
@@ -754,7 +751,6 @@ function makeWagnerFicherMatrix(str1: string, str2: string) {
         }
 
     }
-    //console.log(distances.toString());
 
     return distances;
 }
@@ -763,7 +759,7 @@ function getWagnerFischerScore(str1: string, str2: string) {
     let str1Clean = str1.replace(/\s+/g, '');
     let str2Clean = str2.replace(/\s+/g, '');
 
-    const matrix = makeWagnerFicherMatrix(str1, str2);
+    const matrix = createWagnerFischerMatrix(str1, str2);
     let i = 0;
     let j = 0;
     let totalDistance = 0;
@@ -804,7 +800,7 @@ function getWagnerFischerScoreWithoutSpaces(str1: string, str2: string) {
     let str1Clean = str1.replace(/\s+/g, '');
     let str2Clean = str2.replace(/\s+/g, '');
 
-    const matrix = makeWagnerFicherMatrix(str1Clean, str2Clean);
+    const matrix = createWagnerFischerMatrix(str1Clean, str2Clean);
     let i = 0;
     let j = 0;
     let totalDistance = 0;
@@ -840,4 +836,4 @@ function getWagnerFischerScoreWithoutSpaces(str1: string, str2: string) {
     return 1 - (reversePuntuation);
 }
 
-export { makeWagnerFicherMatrix, getWagnerFischerScore,getWagnerFischerScoreWithoutSpaces };
+export { createWagnerFischerMatrix, getWagnerFischerScore,getWagnerFischerScoreWithoutSpaces };
