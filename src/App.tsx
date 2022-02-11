@@ -1,26 +1,30 @@
-import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import Dictaphone from './componentes/Dictaphone';
+import { Box, Center, Text } from '@chakra-ui/react';
+import { useSpeechRecognition } from 'react-speech-recognition';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+  const {
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+
+  if (!browserSupportsSpeechRecognition) {
+    return (
+      <Center>
+        <Box>
+          <Text>Browser doesn't support speech recognition</Text>
+        </Box>
+      </Center>
+    );
+  } else {
+
+    return (
+      <Box className="App" width='60%' margin='auto'>
+        <Dictaphone />
+      </Box>
+    );
+  }
 }
 
 export default App;
