@@ -42,10 +42,15 @@ const Dictaphone = () => {
   }
 
   const toPhonemes = () => {
-
     let givenTextValue = '';
     if (givenText.current) {
       givenTextValue = givenText.current.value;
+    }else{
+      return;
+    }
+
+    if(givenTextValue==='' || transcript===''){
+      return;
     }
 
     const givenTextConverted = parseFrench(givenTextValue, true, false);
