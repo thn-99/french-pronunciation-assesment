@@ -5,6 +5,7 @@ import parseFrench from '../openIpa/transcription/french/ParseFrench';
 import { compareTwoStrings } from 'string-similarity';
 import { Box, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
 import { FaMicrophone } from 'react-icons/fa'
+import {  getWagnerFischerScore, makeWagnerFicherMatrix } from './costMatrix';
 const Dictaphone = () => {
   const givenText = useRef<HTMLInputElement>(null);
   const {
@@ -26,6 +27,7 @@ const Dictaphone = () => {
   const [transcriptWordsPhonemes, settranscriptWordsPhonemes] = useState<string>();
   const [wordsPuntuation, setWordsPuntuation] = useState<number>();
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
+  const [phonemesPuntuationWagnerFischer,setPhonemesPuntuationWagnerFischer] = useState<number>();
 
 
 
@@ -59,6 +61,8 @@ const Dictaphone = () => {
     const phonemesPunt = compareTwoStrings(transPhonemesText, givenPhonemesText);
     setPhonemesPuntuation(phonemesPunt);
     ;
+    const WagnerFischerDistance =  getWagnerFischerScore(givenPhonemesText,transPhonemesText);
+    setPhonemesPuntuationWagnerFischer(WagnerFischerDistance)
   }
 
 
@@ -139,6 +143,14 @@ const Dictaphone = () => {
           </Box>
           <Box width={'75%'}>
             <Text>{phonemesPuntuation}</Text>
+          </Box>
+        </Flex>
+        <Flex textAlign={'left'}>
+          <Box width={'25%'}>
+            <Text>ScoreFischer:</Text>
+          </Box>
+          <Box width={'75%'}>
+            <Text>{phonemesPuntuationWagnerFischer}</Text>
           </Box>
         </Flex>
       </Box>
