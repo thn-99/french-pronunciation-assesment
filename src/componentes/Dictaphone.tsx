@@ -5,7 +5,7 @@ import parseFrench from '../openIpa/transcription/french/ParseFrench';
 import { compareTwoStrings } from 'string-similarity';
 import { Box, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
 import { FaMicrophone } from 'react-icons/fa'
-import {  getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces, makeWagnerFicherMatrix } from './costMatrix';
+import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces, makeWagnerFicherMatrix } from './costMatrix';
 const Dictaphone = () => {
   const givenText = useRef<HTMLInputElement>(null);
   const {
@@ -27,14 +27,18 @@ const Dictaphone = () => {
   const [transcriptWordsPhonemes, settranscriptWordsPhonemes] = useState<string>();
   const [wordsPuntuation, setWordsPuntuation] = useState<number>();
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
-  const [phonemesPuntuationWagnerFischer,setPhonemesPuntuationWagnerFischer] = useState<number>();
-  const [phonemesPuntuationWagnerFischerWithoutSpaces,setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
+  const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
+  const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
 
 
 
   const onClickStart = () => {
-    resetTranscript();
-    SpeechRecognition.startListening({ continuous: false, language: 'fr-FR' });
+    if (!listening) {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: false, language: 'fr-FR' });
+    }else{
+      SpeechRecognition.stopListening();
+    }
   }
 
   const toPhonemes = () => {
@@ -44,7 +48,7 @@ const Dictaphone = () => {
       givenTextValue = givenText.current.value;
     }
 
-    const givenTextConverted = parseFrench(givenTextValue,true,false);
+    const givenTextConverted = parseFrench(givenTextValue, true, false);
     const transcriptConverted = parseFrench(transcript, true, false);
 
 
@@ -62,9 +66,9 @@ const Dictaphone = () => {
     const phonemesPunt = compareTwoStrings(transPhonemesText, givenPhonemesText);
     setPhonemesPuntuation(phonemesPunt);
     ;
-    const WagnerFischerDistance =  getWagnerFischerScore(givenPhonemesText,transPhonemesText);
+    const WagnerFischerDistance = getWagnerFischerScore(givenPhonemesText, transPhonemesText);
     setPhonemesPuntuationWagnerFischer(WagnerFischerDistance)
-    const WagnerFischerDistanceWithoutSpaces =  getWagnerFischerScoreWithoutSpaces(givenPhonemesText,transPhonemesText);
+    const WagnerFischerDistanceWithoutSpaces = getWagnerFischerScoreWithoutSpaces(givenPhonemesText, transPhonemesText);
     setPhonemesPuntuationWagnerFischerWithoutSpaces(WagnerFischerDistanceWithoutSpaces)
 
   }
