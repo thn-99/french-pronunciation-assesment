@@ -5,7 +5,7 @@ import parseFrench from '../openIpa/transcription/french/ParseFrench';
 import { compareTwoStrings } from 'string-similarity';
 import { Box, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
 import { FaMicrophone } from 'react-icons/fa'
-import {  getWagnerFischerScore, makeWagnerFicherMatrix } from './costMatrix';
+import {  getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces, makeWagnerFicherMatrix } from './costMatrix';
 const Dictaphone = () => {
   const givenText = useRef<HTMLInputElement>(null);
   const {
@@ -28,6 +28,7 @@ const Dictaphone = () => {
   const [wordsPuntuation, setWordsPuntuation] = useState<number>();
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
   const [phonemesPuntuationWagnerFischer,setPhonemesPuntuationWagnerFischer] = useState<number>();
+  const [phonemesPuntuationWagnerFischerWithoutSpaces,setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
 
 
 
@@ -43,8 +44,8 @@ const Dictaphone = () => {
       givenTextValue = givenText.current.value;
     }
 
-    const givenTextConverted = parseFrench(givenTextValue, true, true);
-    const transcriptConverted = parseFrench(transcript, true, true);
+    const givenTextConverted = parseFrench(givenTextValue,true,false);
+    const transcriptConverted = parseFrench(transcript, true, false);
 
 
     let givenPhonemesText = getStringFromConversionToIpaResult(givenTextConverted);
@@ -63,6 +64,9 @@ const Dictaphone = () => {
     ;
     const WagnerFischerDistance =  getWagnerFischerScore(givenPhonemesText,transPhonemesText);
     setPhonemesPuntuationWagnerFischer(WagnerFischerDistance)
+    const WagnerFischerDistanceWithoutSpaces =  getWagnerFischerScoreWithoutSpaces(givenPhonemesText,transPhonemesText);
+    setPhonemesPuntuationWagnerFischerWithoutSpaces(WagnerFischerDistanceWithoutSpaces)
+
   }
 
 
@@ -147,10 +151,18 @@ const Dictaphone = () => {
         </Flex>
         <Flex textAlign={'left'}>
           <Box width={'25%'}>
-            <Text>ScoreFischer:</Text>
+            <Text>WagnerFischer With spaces:</Text>
           </Box>
           <Box width={'75%'}>
             <Text>{phonemesPuntuationWagnerFischer}</Text>
+          </Box>
+        </Flex>
+        <Flex textAlign={'left'}>
+          <Box width={'25%'}>
+            <Text>WagnerFischer W/O spaces:</Text>
+          </Box>
+          <Box width={'75%'}>
+            <Text>{phonemesPuntuationWagnerFischerWithoutSpaces}</Text>
           </Box>
         </Flex>
       </Box>

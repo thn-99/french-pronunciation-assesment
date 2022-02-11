@@ -737,6 +737,8 @@ function getCost(char1: string, char2: string): number {
         return consonantsCostsMatrix[char1][char2];
     } else if (char1 in vowelCostMatrix && char2 in vowelCostMatrix) {
         return vowelCostMatrix[char1][char2];
+    }else if( char1== " " || char2 == " "){
+        return 4;
     }
     return 9;
 }
@@ -752,12 +754,53 @@ function makeWagnerFicherMatrix(str1: string, str2: string) {
         }
 
     }
-    console.log(distances.toString());
+    //console.log(distances.toString());
 
     return distances;
 }
 
 function getWagnerFischerScore(str1: string, str2: string) {
+    let str1Clean = str1.replace(/\s+/g, '');
+    let str2Clean = str2.replace(/\s+/g, '');
+
+    const matrix = makeWagnerFicherMatrix(str1, str2);
+    let i = 0;
+    let j = 0;
+    let totalDistance = 0;
+    while (i < matrix.length || j < matrix[0].length) {
+        totalDistance += matrix[i][j];
+        let right = 12, down = 12, next = 12;
+        if (i < matrix.length-1 && j < matrix[0].length-1) {
+            next = matrix[i + 1][j + 1];
+
+        }
+        if (i < matrix.length-1) {
+            down = matrix[i + 1][j];
+        }
+        if (j < matrix[0].length-1) {
+            right = matrix[i][j + 1];
+
+        }
+
+        if (next <= down && next <= right) {
+            i++;
+            j++;
+        }
+        else if (down <= right) {
+            i++;
+        } else {
+            j++;
+        }
+
+
+    }
+    const stringDistance = str1Clean.length * 9;
+    const emptyStringDistance = (str1.length-str1Clean.length)*4;
+    const reversePuntuation = totalDistance / (stringDistance+emptyStringDistance);
+    return 1 - (reversePuntuation);
+}
+
+function getWagnerFischerScoreWithoutSpaces(str1: string, str2: string) {
     let str1Clean = str1.replace(/\s+/g, '');
     let str2Clean = str2.replace(/\s+/g, '');
 
@@ -793,10 +836,8 @@ function getWagnerFischerScore(str1: string, str2: string) {
 
     }
     const stringDistance = str1Clean.length * 9;
-    const reversePuntuation = totalDistance / stringDistance;
+    const reversePuntuation = totalDistance / (stringDistance);
     return 1 - (reversePuntuation);
-
-
 }
 
-export { makeWagnerFicherMatrix, getWagnerFischerScore };
+export { makeWagnerFicherMatrix, getWagnerFischerScore,getWagnerFischerScoreWithoutSpaces };
