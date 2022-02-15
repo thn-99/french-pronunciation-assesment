@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import React,{ useEffect, useRef, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Result } from '../openIpa/constants/Interfaces';
 import parseFrench from '../openIpa/transcription/french/ParseFrench';
 import { compareTwoStrings } from 'string-similarity';
-import { Box, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
+import { Box, Button, Center, Circle, Flex, Heading, Input, Text } from '@chakra-ui/react';
 import { FaMicrophone } from 'react-icons/fa'
 import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces } from '../utils/WagnerFischerUtils';
+import VolumeMeter from './VolumeMeter';
 const Dictaphone = () => {
   const [lastListeningState, setLastListeningState] = useState(false);
   const [givenTextWordsPhonemes, setGivenTextWordsPhonemes] = useState<string>();
@@ -14,13 +15,15 @@ const Dictaphone = () => {
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
   const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
   const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
-
   const givenText = useRef<HTMLInputElement>(null);
+
   const {
     transcript,
     listening,
     resetTranscript
   } = useSpeechRecognition();
+  const speechSynt = window.speechSynthesis;
+
 
   useEffect(() => {
     if (lastListeningState && !listening) {
@@ -33,24 +36,29 @@ const Dictaphone = () => {
 
 
 
-  const onListeningToggle = () => {
+  const onListeningToggle = async () => {
     if (!listening) {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: false, language: 'fr-FR' });
-    }else{
+
+
+    } else {
       SpeechRecognition.stopListening();
     }
   }
 
   const convertAndScore = () => {
+
+
     let givenTextValue = '';
     if (givenText.current) {
       givenTextValue = givenText.current.value;
-    }else{
+      givenTextValue = givenTextValue.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+    } else {
       return;
     }
 
-    if(givenTextValue==='' || transcript===''){
+    if (givenTextValue === '' || transcript === '') {
       return;
     }
 
@@ -71,7 +79,7 @@ const Dictaphone = () => {
 
     const phonemesPunt = compareTwoStrings(transPhonemesText, givenPhonemesText);
     setPhonemesPuntuation(phonemesPunt);
-    ;
+
     const WagnerFischerDistance = getWagnerFischerScore(givenPhonemesText, transPhonemesText);
     setPhonemesPuntuationWagnerFischer(WagnerFischerDistance)
     const WagnerFischerDistanceWithoutSpaces = getWagnerFischerScoreWithoutSpaces(givenPhonemesText, transPhonemesText);
@@ -94,15 +102,58 @@ const Dictaphone = () => {
 
 
 
+  function playGivenText() {
+    if (givenText.current && givenText.current.value !== '') {
+      speak(givenText.current.value, speechSynt);
+    }
+  }
+
+  let frenchVoice: SpeechSynthesisVoice;
+  function getFrenchVoice(synth: SpeechSynthesis) {
+    synth.getVoices().forEach((value) => {
+      if (value.lang.toLowerCase().includes('fr')) {
+        frenchVoice = value;
+      }
+    })
+  }
+
+  async function speak(textToRead: string, synth: SpeechSynthesis) {
+    if (!frenchVoice) {
+      getFrenchVoice(synth);
+    }
+    if (synth.speaking) {
+      console.error("speechSynthesis.speaking")
+      return
+    }
+    if (textToRead !== "") {
+      const utterThis = new SpeechSynthesisUtterance(textToRead)
+      // utterThis.onend = function (event) {
+      //   onEndCallback("_play")
+      // }
+      // , onEndCallback: (status: string) => void,
+      utterThis.onerror = function (event) {
+        console.error("SpeechSynthesisUtterance.onerror")
+      }
+      // utterThis.voice = voices[0]
+      utterThis.pitch = 1;
+      utterThis.rate = 1;
+      utterThis.voice = frenchVoice;
+
+      synth.speak(utterThis);
+    }
+
+  }
+
   return (
     <Box>
       <Input ref={givenText} isDisabled={listening} defaultValue='je aime vous'></Input>
+      <Button onClick={playGivenText}>Play</Button>
       <Center>
-        <Circle size={'50px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
+        <Circle size={'60px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
           <FaMicrophone />
+          {listening ? <VolumeMeter /> : null}
         </Circle>
       </Center>
-
 
 
       <Box mt={6}>
