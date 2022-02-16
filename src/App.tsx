@@ -1,3 +1,4 @@
+import React from 'react';
 import './App.css';
 import Dictaphone from './components/Dictaphone';
 import { Box, Center, Text } from '@chakra-ui/react';
@@ -13,7 +14,7 @@ function App() {
     return (
       <Center>
         <Box>
-          <Text>Browser doesn't support speech recognition</Text>
+          <Text>Browser does not support speech recognition</Text>
         </Box>
       </Center>
     );

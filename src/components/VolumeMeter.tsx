@@ -1,3 +1,4 @@
+import { Circle } from "@chakra-ui/react";
 import React,{ useEffect, useState } from "react";
 
 const VolumeMeter = () => {
@@ -12,8 +13,9 @@ const VolumeMeter = () => {
         startListening();
         return (): void => {
             clearInterval(microPhoneIntervalHolder);
+            microPhoneIntervalHolder=null;
         }
-    })
+    },[])
 
     async function startListening() {
         try {
@@ -36,10 +38,11 @@ const VolumeMeter = () => {
                 let volumeSum = 0;
                 for (const volume of volumes)
                     volumeSum += volume;
+                console.log("setter1")
                 setMicrophoneLoudness(volumeSum / volumes.length);
                 // Value range: 127 = analyser.maxDecibels - analyser.minDecibels;
             };
-            microPhoneIntervalHolder = setInterval(volumeCallback, 100);
+            microPhoneIntervalHolder = setInterval(volumeCallback, 50);
         } catch (e) {
             console.error('Failed get microphone volume', e);
         }
@@ -51,7 +54,7 @@ const VolumeMeter = () => {
 
 
     return (
-        <span>{microphoneLoudness}</span>
+        <Circle size={(microphoneLoudness?microphoneLoudness*0.4:20) + 'px'} bg="black" ></Circle>
     )
 }
 

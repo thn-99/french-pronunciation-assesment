@@ -1,4 +1,4 @@
-import React,{ useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Result } from '../openIpa/constants/Interfaces';
 import parseFrench from '../openIpa/transcription/french/ParseFrench';
@@ -7,6 +7,18 @@ import { Box, Button, Center, Circle, Flex, Heading, Input, Text } from '@chakra
 import { FaMicrophone } from 'react-icons/fa'
 import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces } from '../utils/WagnerFischerUtils';
 import VolumeMeter from './VolumeMeter';
+import WordColorScore from './WordColorScore';
+import { speak } from './TextToSpeech';
+
+export interface WordsComparison {
+  givenWord?: string,
+  convertedWord?: string,
+  error?: number,
+  index: number,
+  scored: boolean,
+
+}
+
 const Dictaphone = () => {
   const [lastListeningState, setLastListeningState] = useState(false);
   const [givenTextWordsPhonemes, setGivenTextWordsPhonemes] = useState<string>();
@@ -15,6 +27,7 @@ const Dictaphone = () => {
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
   const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
   const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
+  const [sendingColor, setSendingColor] = useState<WordsComparison[]>();
   const givenText = useRef<HTMLInputElement>(null);
 
   const {
@@ -32,7 +45,18 @@ const Dictaphone = () => {
     setLastListeningState(listening);
   }, [listening])
 
+  useEffect(() => {
+    convertRealTime();
+  }, [transcript])
 
+  const convertRealTime = () => {
+    const splittedTranscriptWords = transcript.split(" ");
+
+    if (splittedTranscriptWords.length > 1) {
+      //assign new splitted length
+
+    }
+  }
 
 
 
@@ -53,7 +77,10 @@ const Dictaphone = () => {
     let givenTextValue = '';
     if (givenText.current) {
       givenTextValue = givenText.current.value;
-      givenTextValue = givenTextValue.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+      // givenTextValue = givenTextValue.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+
+      givenTextValue = givenTextValue.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+
     } else {
       return;
     }
@@ -61,6 +88,106 @@ const Dictaphone = () => {
     if (givenTextValue === '' || transcript === '') {
       return;
     }
+    const textComparison: WordsComparison[] = [];
+    const givenTextArray = givenTextValue.split(" ");
+    let givenTextLastPointer = 0, convertedTextLastPointer = 0;
+    let lastIi = 0;
+
+    const transcriptedTextArray = transcript.split(" ");
+    transcriptedTextArray.forEach((word, index) => {
+      let givenTextIndex = givenTextLastPointer;
+      while (givenTextIndex < (index + 2 < givenTextArray.length ? index + 2 : givenTextArray.length)) {
+        if (word === givenTextArray[givenTextIndex] || getStringFromConversionToIpaResult(parseFrench(word)) === getStringFromConversionToIpaResult(parseFrench(givenTextArray[givenTextIndex]))) {
+
+          lastIi++;
+          let hadMiddleFirst, hadMiddleSecond = false;
+          while (givenTextLastPointer < givenTextIndex) {
+            hadMiddleFirst = true;
+            if (textComparison[lastIi]) {
+              textComparison[lastIi].givenWord += ' ' + givenTextArray[givenTextLastPointer];
+            } else {
+              textComparison[lastIi] = { givenWord: givenTextArray[givenTextLastPointer], scored: false, index: lastIi };
+            }
+            givenTextLastPointer++;
+          }
+
+          while (convertedTextLastPointer < index) {
+            hadMiddleSecond = true;
+            if (textComparison[lastIi] && textComparison[lastIi].convertedWord) {
+              textComparison[lastIi].convertedWord += ' ' + transcriptedTextArray[convertedTextLastPointer];
+            } else if (textComparison[lastIi]) {
+              textComparison[lastIi].convertedWord = transcriptedTextArray[convertedTextLastPointer];
+            } else {
+              textComparison[lastIi] = { convertedWord: transcriptedTextArray[convertedTextLastPointer], scored: false, index: lastIi };
+            }
+            convertedTextLastPointer++;
+          }
+
+          if (hadMiddleFirst || hadMiddleSecond) {
+            lastIi++;
+          }
+
+          textComparison.push({ givenWord: givenTextArray[givenTextIndex], convertedWord: word, scored: true, index: lastIi, error: 0 });
+          givenTextLastPointer++;
+          convertedTextLastPointer++;
+
+
+
+          return;
+        }
+        givenTextIndex++;
+
+      }
+
+
+
+
+    })
+    if (givenTextLastPointer < givenTextArray.length || convertedTextLastPointer < transcriptedTextArray.length) {
+      textComparison.push({ scored: false, index: ++lastIi });
+
+      while (givenTextLastPointer < givenTextArray.length) {
+        if (textComparison[textComparison.length-1].givenWord) {
+          textComparison[textComparison.length-1].givenWord += ' ' + givenTextArray[givenTextLastPointer];
+        } else {
+          textComparison[textComparison.length-1].givenWord = givenTextArray[givenTextLastPointer];
+        }
+        givenTextLastPointer++;
+      }
+
+      while (convertedTextLastPointer < transcriptedTextArray.length) {
+        if (textComparison[textComparison.length-1].convertedWord) {
+          textComparison[textComparison.length-1].convertedWord += ' ' + transcriptedTextArray[convertedTextLastPointer];
+        } else {
+          textComparison[textComparison.length-1].convertedWord = transcriptedTextArray[convertedTextLastPointer];
+        }
+        convertedTextLastPointer++;
+      }
+    }
+
+    textComparison.forEach((w) => {
+      if (!w.scored && w.convertedWord && w.givenWord) {
+        const givenTextPhonemesString = getStringFromConversionToIpaResult(parseFrench(w.givenWord));
+        const convertedTextPhonemesString = getStringFromConversionToIpaResult(parseFrench(w.convertedWord));
+        w.error = 1 - getWagnerFischerScore(givenTextPhonemesString, convertedTextPhonemesString);
+        w.scored = true;
+      }
+    })
+
+
+    textComparison.forEach((w) => {
+      if (!w.scored) {
+        w.error = 1;
+      }
+    });
+
+    setSendingColor(textComparison);
+
+
+    console.log(textComparison);
+
+
+
 
     const givenTextConverted = parseFrench(givenTextValue, true, false);
     const transcriptConverted = parseFrench(transcript, true, false);
@@ -108,41 +235,6 @@ const Dictaphone = () => {
     }
   }
 
-  let frenchVoice: SpeechSynthesisVoice;
-  function getFrenchVoice(synth: SpeechSynthesis) {
-    synth.getVoices().forEach((value) => {
-      if (value.lang.toLowerCase().includes('fr')) {
-        frenchVoice = value;
-      }
-    })
-  }
-
-  async function speak(textToRead: string, synth: SpeechSynthesis) {
-    if (!frenchVoice) {
-      getFrenchVoice(synth);
-    }
-    if (synth.speaking) {
-      console.error("speechSynthesis.speaking")
-      return
-    }
-    if (textToRead !== "") {
-      const utterThis = new SpeechSynthesisUtterance(textToRead)
-      // utterThis.onend = function (event) {
-      //   onEndCallback("_play")
-      // }
-      // , onEndCallback: (status: string) => void,
-      utterThis.onerror = function (event) {
-        console.error("SpeechSynthesisUtterance.onerror")
-      }
-      // utterThis.voice = voices[0]
-      utterThis.pitch = 1;
-      utterThis.rate = 1;
-      utterThis.voice = frenchVoice;
-
-      synth.speak(utterThis);
-    }
-
-  }
 
   return (
     <Box>
@@ -150,11 +242,14 @@ const Dictaphone = () => {
       <Button onClick={playGivenText}>Play</Button>
       <Center>
         <Circle size={'60px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
-          <FaMicrophone />
-          {listening ? <VolumeMeter /> : null}
+          
+          {listening ? <VolumeMeter /> : <FaMicrophone />}
         </Circle>
       </Center>
+    <Box width="100%">
+    <Heading>{sendingColor ? <WordColorScore wordsComparison={sendingColor} /> : <Text>Click the red button to start</Text>}</Heading>
 
+    </Box>
 
       <Box mt={6}>
         <Heading textAlign={'left'}>Comparison by words</Heading>
