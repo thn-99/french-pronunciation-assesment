@@ -11,6 +11,7 @@ import WordColorScore from './WordColorScore';
 import { speak } from './TextToSpeech';
 import RealTimeValidation from './RealTimeValidation';
 const speechSynt = window.speechSynthesis;
+var writtenNumber = require('written-number');
 
 export interface WordsComparison {
   givenWord?: string,
@@ -39,10 +40,13 @@ const Dictaphone = () => {
     resetTranscript
   } = useSpeechRecognition();
 
+
+  //Assigns the default input to the clean input
   useEffect(()=>{
     onInputChange();
   },[])
 
+  //To call the scoring method when finished to listen
   useEffect(() => {
     if (lastListeningState && !listening) {
       convertAndScore();
@@ -53,7 +57,7 @@ const Dictaphone = () => {
   //Every time the input changes, cleans the new input and set's to givenText, resets transcript and Finalcomparison.
   function onInputChange(){
     if(givenTextRef.current){
-      const cleanedText = givenTextRef.current.value.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+      const cleanedText = givenTextRef.current.value.replace(/[.,/#!$%^&*;:{}=_`~()]/g, "");
       SetGivenText(cleanedText);
     }else{
       SetGivenText(undefined);
@@ -61,6 +65,7 @@ const Dictaphone = () => {
     setFinalTextComparison(undefined);
     resetTranscript();
   }
+
 
   const onListeningToggle = async () => {
     if (!listening) {
@@ -74,6 +79,17 @@ const Dictaphone = () => {
     }
   }
 
+  function replaceNumbersByWordsInString(str:string){
+    const splittedStr = str.split(" ");
+    splittedStr.forEach(word => {
+      const number = parseInt(word);
+      if(number != NaN){
+        word=writtenNumber(number);
+      }
+    })
+    return splittedStr.join(" ");
+  }
+
   const convertAndScore = () => {
 
 
@@ -82,15 +98,18 @@ const Dictaphone = () => {
 
     }
 
-    if (givenText === '' || transcript === '') {
+    if (givenText == '' || transcript == '') {
       return;
     }
     const textComparison: WordsComparison[] = [];
     const givenTextArray = givenText.split(" ");
+
     let givenTextLastPointer = 0, convertedTextLastPointer = 0;
     let lastIi = 0;
 
-    const transcriptedTextArray = transcript.split(" ");
+    const transcriptedTextArray = replaceNumbersByWordsInString(transcript).split(" ");
+    
+
     transcriptedTextArray.forEach((word, index) => {
       let givenTextIndex = givenTextLastPointer;
       while (givenTextIndex < (index + 3 < givenTextArray.length ? index + 3 : givenTextArray.length)) {
@@ -257,7 +276,7 @@ const Dictaphone = () => {
             <Text>Converted text:</Text>
           </Box>
           <Box width={'75%'}>
-            <Text>{transcript}</Text>
+            <Text>{replaceNumbersByWordsInString(transcript)}</Text>
           </Box>
         </Flex>
         <Flex textAlign={'left'}>
