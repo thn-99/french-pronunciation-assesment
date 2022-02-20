@@ -13,13 +13,15 @@ const RealTimeValidation = ({ givenText, transcript }: { givenText: string, tran
     const [transcriptLastDetectedIndex, SetTranscriptLastDetectedIndex] = useState<number>(0);
     const [boldText, setBoldText] = useState<string>();
     const [normalText, setNormalText] = useState<string>();
+    
+
     useEffect(() => {
         if(givenText != "Press to start"){
             setNewgivenTextLastReadIndex();
         }else{
             setNormalText("Press to start");
         }
-    }, [transcript])
+    }, [transcript,givenText])
 
 
     function getStringFromConversionToIpaResult(conversionResult: Result): string {
