@@ -26,7 +26,7 @@ async function speak(textToRead: string, synth: SpeechSynthesis) {
         }
         // utterThis.voice = voices[0]
         utterThis.pitch = 1;
-        utterThis.rate = 1;
+        utterThis.rate = 0.8;
         utterThis.voice = frenchVoice;
 
         synth.speak(utterThis);

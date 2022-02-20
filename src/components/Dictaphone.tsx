@@ -9,6 +9,8 @@ import { getWagnerFischerScore, getWagnerFischerScoreWithoutSpaces } from '../ut
 import VolumeMeter from './VolumeMeter';
 import WordColorScore from './WordColorScore';
 import { speak } from './TextToSpeech';
+import RealTimeValidation from './RealTimeValidation';
+const speechSynt = window.speechSynthesis;
 
 export interface WordsComparison {
   givenWord?: string,
@@ -27,16 +29,19 @@ const Dictaphone = () => {
   const [phonemesPuntuation, setPhonemesPuntuation] = useState<number>();
   const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
   const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
-  const [sendingColor, setSendingColor] = useState<WordsComparison[]>();
-  const givenText = useRef<HTMLInputElement>(null);
+  const [finalTextComparison, setFinalTextComparison] = useState<WordsComparison[]>();
+  const [givenText,SetGivenText] = useState<string>();
+  const givenTextRef = useRef<HTMLInputElement>(null);
 
   const {
     transcript,
     listening,
     resetTranscript
   } = useSpeechRecognition();
-  const speechSynt = window.speechSynthesis;
 
+  useEffect(()=>{
+    onInputChange();
+  },[])
 
   useEffect(() => {
     if (lastListeningState && !listening) {
@@ -45,25 +50,23 @@ const Dictaphone = () => {
     setLastListeningState(listening);
   }, [listening])
 
-  useEffect(() => {
-    convertRealTime();
-  }, [transcript])
-
-  const convertRealTime = () => {
-    const splittedTranscriptWords = transcript.split(" ");
-
-    if (splittedTranscriptWords.length > 1) {
-      //assign new splitted length
-
+  //Every time the input changes, cleans the new input and set's to givenText, resets transcript and Finalcomparison.
+  function onInputChange(){
+    if(givenTextRef.current){
+      const cleanedText = givenTextRef.current.value.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
+      SetGivenText(cleanedText);
+    }else{
+      SetGivenText(undefined);
     }
+    setFinalTextComparison(undefined);
+    resetTranscript();
   }
-
-
 
   const onListeningToggle = async () => {
     if (!listening) {
       resetTranscript();
-      SpeechRecognition.startListening({ continuous: false, language: 'fr-FR' });
+      setFinalTextComparison(undefined);
+      SpeechRecognition.startListening({ continuous: true, language: 'fr-FR' });
 
 
     } else {
@@ -74,29 +77,23 @@ const Dictaphone = () => {
   const convertAndScore = () => {
 
 
-    let givenTextValue = '';
-    if (givenText.current) {
-      givenTextValue = givenText.current.value;
-      // givenTextValue = givenTextValue.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
-
-      givenTextValue = givenTextValue.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
-
-    } else {
+    if (!givenText) {
       return;
+
     }
 
-    if (givenTextValue === '' || transcript === '') {
+    if (givenText === '' || transcript === '') {
       return;
     }
     const textComparison: WordsComparison[] = [];
-    const givenTextArray = givenTextValue.split(" ");
+    const givenTextArray = givenText.split(" ");
     let givenTextLastPointer = 0, convertedTextLastPointer = 0;
     let lastIi = 0;
 
     const transcriptedTextArray = transcript.split(" ");
     transcriptedTextArray.forEach((word, index) => {
       let givenTextIndex = givenTextLastPointer;
-      while (givenTextIndex < (index + 2 < givenTextArray.length ? index + 2 : givenTextArray.length)) {
+      while (givenTextIndex < (index + 3 < givenTextArray.length ? index + 3 : givenTextArray.length)) {
         if (word === givenTextArray[givenTextIndex] || getStringFromConversionToIpaResult(parseFrench(word)) === getStringFromConversionToIpaResult(parseFrench(givenTextArray[givenTextIndex]))) {
 
           lastIi++;
@@ -181,15 +178,9 @@ const Dictaphone = () => {
       }
     });
 
-    setSendingColor(textComparison);
+    setFinalTextComparison(textComparison);
 
-
-    console.log(textComparison);
-
-
-
-
-    const givenTextConverted = parseFrench(givenTextValue, true, false);
+    const givenTextConverted = parseFrench(givenText, true, false);
     const transcriptConverted = parseFrench(transcript, true, false);
 
 
@@ -201,7 +192,7 @@ const Dictaphone = () => {
     setTranscriptWordsPhonemes(transPhonemesText);
 
 
-    const wordPunt = compareTwoStrings(transcript, givenTextValue);
+    const wordPunt = compareTwoStrings(transcript, givenText);
     setWordsPuntuation(wordPunt);
 
     const phonemesPunt = compareTwoStrings(transPhonemesText, givenPhonemesText);
@@ -230,15 +221,15 @@ const Dictaphone = () => {
 
 
   function playGivenText() {
-    if (givenText.current && givenText.current.value !== '') {
-      speak(givenText.current.value, speechSynt);
+    if (givenText && givenText !== '') {
+      speak(givenText, speechSynt);
     }
   }
 
 
   return (
     <Box>
-      <Input ref={givenText} isDisabled={listening} defaultValue='je aime vous'></Input>
+      <Input ref={givenTextRef} isDisabled={listening} onChange={onInputChange} defaultValue='je aime vous'></Input>
       <Button onClick={playGivenText}>Play</Button>
       <Center>
         <Circle size={'60px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
@@ -246,10 +237,10 @@ const Dictaphone = () => {
           {listening ? <VolumeMeter /> : <FaMicrophone />}
         </Circle>
       </Center>
-    <Box width="100%">
-    <Heading>{sendingColor ? <WordColorScore wordsComparison={sendingColor} /> : <Text>Click the red button to start</Text>}</Heading>
-
-    </Box>
+      <Center>
+    <div>{givenText && !finalTextComparison ? <RealTimeValidation givenText={givenText} transcript={transcript} />:null}</div>
+    <div>{finalTextComparison ? <WordColorScore wordsComparison={finalTextComparison} /> : null }</div>
+    </Center>
 
       <Box mt={6}>
         <Heading textAlign={'left'}>Comparison by words</Heading>
@@ -258,7 +249,7 @@ const Dictaphone = () => {
             <Text>Given text:</Text>
           </Box>
           <Box width={'75%'}>
-            <Text>{givenText.current?.value}</Text>
+            <Text>{givenText}</Text>
           </Box>
         </Flex>
         <Flex textAlign={'left'}>
