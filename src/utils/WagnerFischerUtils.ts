@@ -757,7 +757,7 @@ function createWagnerFischerMatrix(str1: string, str2: string) {
 
 function getWagnerFischerScore(str1: string, str2: string) {
     let str1Clean = str1.replace(/\s+/g, '');
-    let str2Clean = str2.replace(/\s+/g, '');
+    // let str2Clean = str2.replace(/\s+/g, '');
 
     const matrix = createWagnerFischerMatrix(str1, str2);
     let i = 0;

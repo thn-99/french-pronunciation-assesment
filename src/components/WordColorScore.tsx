@@ -1,14 +1,9 @@
 /* eslint-disable react/jsx-key */
 import React, { useEffect } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { WordsComparison } from "./Dictaphone";
+import { WordsComparison } from "../utils/SpeechToTextUtils";
 
 const WordColorScore = (props: any) => {
-    // useEffect(() => {
-    // }, [])
-
-
-    // console.log(wordComparison);
 
     function getColor(error: number | undefined): string {
         if (typeof error === 'number' && error !== undefined) {

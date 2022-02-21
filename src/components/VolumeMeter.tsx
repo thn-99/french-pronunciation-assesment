@@ -38,7 +38,6 @@ const VolumeMeter = () => {
                 let volumeSum = 0;
                 for (const volume of volumes)
                     volumeSum += volume;
-                console.log("setter1")
                 setMicrophoneLoudness(volumeSum / volumes.length);
                 // Value range: 127 = analyser.maxDecibels - analyser.minDecibels;
             };

@@ -1,0 +1,1 @@
+All the content of the folder 'openIpa' has been imported from https://github.com/hfellerhoff/openipa, due to the normal import (npm i [github...]) wasn't working due to external dependencies they have.

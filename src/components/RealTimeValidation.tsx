@@ -1,12 +1,5 @@
-import { Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { Result } from "../openIpa/constants/Interfaces";
-import parseFrench from "../openIpa/transcription/french/ParseFrench";
 
-interface RealTimeValidationProps {
-    givenText: string,
-    transcript: string
-}
 
 const RealTimeValidation = ({ givenText, transcript }: { givenText: string, transcript: string }) => {
     const [givenTextLastReadIndex, SetGivenTextLastReadIndex] = useState<number>(0);
@@ -16,24 +9,11 @@ const RealTimeValidation = ({ givenText, transcript }: { givenText: string, tran
     
 
     useEffect(() => {
-        if(givenText != "Press to start"){
-            setNewgivenTextLastReadIndex();
-        }else{
-            setNormalText("Press to start");
-        }
+            setNewIndexesAndText();
     }, [transcript,givenText])
 
 
-    function getStringFromConversionToIpaResult(conversionResult: Result): string {
-        let resultText = '';
-        conversionResult.lines[0].words.forEach((word) => {
-            word.syllables.forEach((syl) => {
-                resultText += syl.ipa;
-            })
-        })
-        return resultText;
-    }
-    function setNewgivenTextLastReadIndex() {
+    function setNewIndexesAndText() {
         const splittedGivenText = givenText.split(" ");
         const splittedTranscript = transcript.split(" ");
         let transcriptLastDetectedIndexLocal = transcriptLastDetectedIndex;
@@ -52,6 +32,9 @@ const RealTimeValidation = ({ givenText, transcript }: { givenText: string, tran
             }
 
         }
+        if(givenTextLastReadIndexLocal<splittedTranscript.length-3 && givenTextLastReadIndexLocal+2<splittedGivenText.length ){
+            givenTextLastReadIndexLocal+=2;
+        }
 
 
         const splittedGivenTextUntilNewIndex = splittedGivenText.slice(0, givenTextLastReadIndexLocal);
@@ -69,9 +52,9 @@ const RealTimeValidation = ({ givenText, transcript }: { givenText: string, tran
 
     }
     return (
-        <div>
+        <>
             <strong>{boldText}</strong> &nbsp;{normalText}
-        </div>
+        </>
     )
 }
 
