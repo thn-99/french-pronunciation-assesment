@@ -22,20 +22,21 @@ const Dictaphone = () => {
   const [phonemesPuntuationWagnerFischer, setPhonemesPuntuationWagnerFischer] = useState<number>();
   const [phonemesPuntuationWagnerFischerWithoutSpaces, setPhonemesPuntuationWagnerFischerWithoutSpaces] = useState<number>();
   const [finalTextComparison, setFinalTextComparison] = useState<WordsComparison[]>();
-  const [givenText,SetGivenText] = useState<string>();
+  const [givenText, SetGivenText] = useState<string>();
   const givenTextRef = useRef<HTMLInputElement>(null);
 
+  // custom hook for the webSpeecApi for Typescript to manage the states of the WebSpeechApi states
   const {
-    transcript,
-    listening,
-    resetTranscript
+    transcript, //The transcripted text as the user speaks, readonly : string
+    listening, // Changes whenever the user starts the listening process, or stops it, readonly : boolean
+    resetTranscript // function to reset the transcript value
   } = useSpeechRecognition();
 
 
   //Assigns the default input to the clean input
-  useEffect(()=>{
+  useEffect(() => {
     onInputChange();
-  },[])
+  }, [])
 
   //To call the scoring method when finished to listen
   useEffect(() => {
@@ -45,17 +46,18 @@ const Dictaphone = () => {
     setLastListeningState(listening);
   }, [listening])
 
-  //Every time the input changes, cleans the new input and assigns it to givenText, resets transcript and Finalcomparison.
-  function onInputChange(){
-    if(givenTextRef.current){
+  // cleans the new input from the html input and assigns it to givenText, resets transcript and Finalcomparison.
+  function onInputChange() {
+    if (givenTextRef.current) {
       const cleanedText = givenTextRef.current.value.replace(/[.,/#!$%^&*;:{}=_`~()]/g, "");
       SetGivenText(cleanedText);
-    }else{
+    } else {
       SetGivenText(undefined);
     }
     setFinalTextComparison(undefined);
     resetTranscript();
   }
+
 
 
   const onListeningToggle = async () => {
@@ -70,7 +72,7 @@ const Dictaphone = () => {
     }
   }
 
-  
+
 
   const convertAndScore = () => {
 
@@ -83,7 +85,7 @@ const Dictaphone = () => {
     if (givenText == '' || transcript == '') {
       return;
     }
-    const textComparison= groupWordsByError(givenText,transcript);
+    const textComparison = groupWordsByError(givenText, transcript);
 
     setFinalTextComparison(textComparison);
 
@@ -129,14 +131,14 @@ const Dictaphone = () => {
       <Button onClick={playGivenText}>Play</Button>
       <Center>
         <Circle size={'60px'} onClick={onListeningToggle} backgroundColor={listening ? 'green' : 'red'} >
-          
+
           {listening ? <VolumeMeter /> : <FaMicrophone />}
         </Circle>
       </Center>
       <Center>
-    <div>{givenText && !finalTextComparison ? <RealTimeValidation givenText={givenText} transcript={transcript} />:null}</div>
-    <div>{finalTextComparison ? <WordColorScore wordsComparison={finalTextComparison} /> : null }</div>
-    </Center>
+        <div>{givenText && !finalTextComparison ? <RealTimeValidation givenText={givenText} transcript={transcript} /> : null}</div>
+        <div>{finalTextComparison ? <WordColorScore wordsComparison={finalTextComparison} /> : null}</div>
+      </Center>
 
       <Box mt={6}>
         <Heading textAlign={'left'}>Comparison by words</Heading>

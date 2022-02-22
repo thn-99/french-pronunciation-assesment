@@ -3,20 +3,24 @@ import React,{ useEffect, useState } from "react";
 
 const VolumeMeter = () => {
 
-
-
     const [microphoneLoudness, setMicrophoneLoudness] = useState<number>();
     let microPhoneIntervalHolder: any = null;
 
 
+    
     useEffect(() => {
+        //To start listening when the component laods
         startListening();
+
+        //To remove the interval wich reads the volume intensity when the component is unmounted
         return (): void => {
             clearInterval(microPhoneIntervalHolder);
             microPhoneIntervalHolder=null;
         }
     },[])
 
+
+    
     async function startListening() {
         try {
             const audioStream = await navigator.mediaDevices.getUserMedia({

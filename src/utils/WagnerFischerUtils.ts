@@ -1,3 +1,8 @@
+/**
+ * Both consonantCostMatrix and vowelCostMatrix are copied from https://hal.archives-ouvertes.fr/hal-02482615v2/document
+ * everything else in this file has been made @Tahseen
+ */
+
 const consonantsCostsMatrix: Record<string, Record<string, number>> = {
     "p": {
         "p": 0,
@@ -726,6 +731,18 @@ const vowelCostMatrix: Record<string, Record<string, number>> = {
     }
 }
 
+
+
+
+/**
+ * 
+ * Return the cost of substitution of two characters (how far they are phonetically in the french languge)
+ * If they are equal, ir returns 0
+ * if both are consonats, it gets the value from consonantsCostsMatrix
+ * if both are vowels, it gets the value from vowelCostMatrix
+ * if on of them its a space, it return 4
+ * else (when one is a vowel and the other a consonant) it return 9 (maximum possible value)
+ */
 function getCost(char1: string, char2: string): number {
     if (char1 === char2) {
         return 0;
@@ -734,12 +751,21 @@ function getCost(char1: string, char2: string): number {
         return consonantsCostsMatrix[char1][char2];
     } else if (char1 in vowelCostMatrix && char2 in vowelCostMatrix) {
         return vowelCostMatrix[char1][char2];
+    
+    /**
+     * The reason to include the spaces is to favor the path that matches words when otherwise there would be a tie between the next 3 paths
+     * Only usefull when comparing phrases, not words
+     */
     }else if( char1== " " || char2 == " "){
         return 4;
     }
     return 9;
 }
 
+/**
+ * Creates a Matrix M (n by m) where n is the length of the first string(str1) and m is the length of the second string(str2)
+ * The value of Mij it is obtained by getting the cost (cost of substitution between two words, in this case) between str1 character at the lenth i  and str2 character at the length j, using the method getCost
+ */
 function createWagnerFischerMatrix(str1: string, str2: string) {
 
     let distances: Array<Array<number>> = [];
@@ -755,6 +781,11 @@ function createWagnerFischerMatrix(str1: string, str2: string) {
     return distances;
 }
 
+/**
+ * Makes a Matrix between the two string, wich values are the cost of substitution between the characters.
+ * Goes trough the path with less cost of substitution and gets distance( the sum of the amount of substituions made) (it just follows the next lowest value starting from the left top edge, so it's not perfect)
+ * Returns the score, by dividing the lowest path distance, by the first string length multiplied by 9 (maximum possible value of substitution) and inverting the result
+ */
 function getWagnerFischerScore(str1: string, str2: string) {
     let str1Clean = str1.replace(/\s+/g, '');
     // let str2Clean = str2.replace(/\s+/g, '');
@@ -764,8 +795,15 @@ function getWagnerFischerScore(str1: string, str2: string) {
     let j = 0;
     let totalDistance = 0;
     while (i < matrix.length || j < matrix[0].length) {
+        //by starting in the top left edge, it adds the value of the substitution at the pointer to the total distance 
         totalDistance += matrix[i][j];
+
+        //As the maximum possible value es 9, we first assign 12 to block all the paths (next is down and right at the same time)
         let right = 12, down = 12, next = 12;
+
+
+
+        //Changes the value of the path if it's possible (if it's inside the array)
         if (i < matrix.length-1 && j < matrix[0].length-1) {
             next = matrix[i + 1][j + 1];
 
@@ -778,6 +816,8 @@ function getWagnerFischerScore(str1: string, str2: string) {
 
         }
 
+
+        //jump to the next lowest path (if they are all equal, it goes right)
         if (next <= down && next <= right) {
             i++;
             j++;

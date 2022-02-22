@@ -30,6 +30,11 @@ const WordColorScore = (props: any) => {
         }
     }
 
+    /**
+     * 
+     * get the sum of all the error of all WordsComparison, 
+     * and then calculates the score by dividing it into the words length and then inverting it.
+     */
     function getScoreOfWordComparison(words: WordsComparison[]) {
         const totalError: number = words.reduce((totalError: number, word) => {
             if (word.error !== undefined) { return totalError += word.error } else { return 1 }

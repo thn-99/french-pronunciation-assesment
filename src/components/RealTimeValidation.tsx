@@ -8,6 +8,7 @@ const RealTimeValidation = ({ givenText, transcript }: { givenText: string, tran
     const [normalText, setNormalText] = useState<string>();
     
 
+    //executes the method every time transcript or givenText changes
     useEffect(() => {
             setNewIndexesAndText();
     }, [transcript,givenText])
