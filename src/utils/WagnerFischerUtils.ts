@@ -764,7 +764,7 @@ function getCost(char1: string, char2: string): number {
 
 /**
  * Creates a Matrix M (n by m) where n is the length of the first string(str1) and m is the length of the second string(str2)
- * The value of Mij it is obtained by getting the cost (cost of substitution between two words, in this case) between str1 character at the lenth i  and str2 character at the length j, using the method getCost
+ * The value of m(ij) it is obtained by getting the cost (cost of substitution between two words, in this case) between str1 character at the lenth i  and str2 character at the length j, using the method getCost
  */
 function createWagnerFischerMatrix(str1: string, str2: string) {
 
